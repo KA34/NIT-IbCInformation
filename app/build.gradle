@@ -4,7 +4,7 @@ android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
     defaultConfig {
-        applicationId "com.ka34.nit_ibc_information"
+        applicationId "com.ka34.nit_ibc_information1"
         minSdkVersion 10
         targetSdkVersion 22
         versionCode 1
