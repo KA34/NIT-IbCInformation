@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 public class MainActivity extends AppCompatActivity {
-    final String version = "0.1";
+    final String version = "0.2";
     String newVersion;
     HTMLparser parse = new HTMLparser();
     private UserSetting userSetting;
