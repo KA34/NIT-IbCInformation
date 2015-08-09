@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spnGrade">
+        <item>１</item>
+        <item>２</item>
+        <item>３</item>
+        <item>４</item>
+        <item>５</item>
+    </string-array>
+    <string-array name="spnDep">
+        <item>Ｍ</item>
+        <item>Ｓ</item>
+        <item>Ｅ</item>
+        <item>Ｄ</item>
+        <item>Ｃ</item>
+    </string-array>
+    <string-array name="spnClass">
+        <item>---</item>
+        <item>１</item>
+        <item>２</item>
+        <item>３</item>
+        <item>４</item>
+        <item>５</item>
+    </string-array>
+</resources>
