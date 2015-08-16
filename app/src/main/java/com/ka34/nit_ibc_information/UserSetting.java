@@ -16,6 +16,7 @@ public class UserSetting {
     public String clas;
     public String abroad;
     public List<Map<String,String>> parseData;
+    public String time;
     // Preferenceのkeyは１つだけなので混乱ない　
     private static final String USER_SETTING_PREF_KEY="USER_SETTING";
 
@@ -44,6 +45,7 @@ public class UserSetting {
         instance.clas = null;
         instance.abroad = null;
         instance.parseData = null;
+        instance.time = null;
         return instance;
     }
 

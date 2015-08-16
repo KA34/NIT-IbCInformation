@@ -1,6 +1,5 @@
 package com.ka34.nit_ibc_information;
 
-import android.util.Log;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -19,10 +18,10 @@ public class HTMLparser {
     public String str = "";
     public List<Map<String,String>> parseList = new ArrayList<>();
     public List<Map<String,String>> filterList = new ArrayList<>();
+    public List<Map<String,String>> deleteList = new ArrayList<>();
     private Map<String,String> tmpMap = new HashMap<>();
 
     public void ParseHTML(){
-        parseList = new ArrayList<>();
         Document doc = Jsoup.parse(infoData);
         Elements ele = doc.getElementsByTag("tr");
         infoData = ele.toString();
@@ -58,7 +57,6 @@ public class HTMLparser {
                 spList = temp;
 
                 for (int k = 0; k <spList.length ; k++) {
-//                    Log.d("-",spList[k]);
                     String[] brList = spList[k].split("<br>");
                     Pattern pbr = Pattern.compile("(^</span>)|(</span>$)");
                     Pattern pbr2 = Pattern.compile("</span>[●◎☆]");
@@ -100,22 +98,44 @@ public class HTMLparser {
                             clas = extractMatchString("^[●◎☆](\\S+)",brList[n]);
                             term = extractMatchString("\\s(\\d|\\d([・，,]\\d)*限)\\s",brList[n]);
                             cont = extractMatchString("限\\s+(.+)$",brList[n]);
+                            Pattern pnbsp = Pattern.compile("&nbsp;");
+                            Matcher mnbsp;
+                            if (cont != null) {
+                                mnbsp = pnbsp.matcher(cont);
+                                cont = mnbsp.replaceAll("");
+                            }
                             if (clas != null) {
-                                if(clas.matches("^[１２３４５][ＭＳＥＤＣ]")){
-                                    AddparseList(brList[0], tdList[0], type, clas, term, cont);
-                                } else if (clas.matches("^[１２３４５]年$")){
-                                    AddparseList(brList[0], tdList[0], type, clas, term, cont);
-                                } else if(clas.matches("^[１２]の[１２３４５]")) {
-                                    AddparseList(brList[0], tdList[0], type, clas, term, cont);
-                                } else if(clas.matches("^[１２]－[１２３４５]")) {
+                                Pattern pmonth = Pattern.compile("\\d\\d月");
+                                Matcher mmonth = pmonth.matcher(brList[0]);
+                                String month;
+                                if (mmonth.find()){
+                                    month = extractMatchString("(\\d\\d)月", brList[0]);
+                                } else {
+                                    month = "0"+ extractMatchString("(\\d)月", brList[0]);
+                                }
+                                Pattern pd = Pattern.compile("\\d\\d日");
+                                Matcher md = pd.matcher(brList[0]);
+                                String date;
+                                if (md.find()){
+                                    date = extractMatchString("(\\d\\d)日",brList[0]);
+                                } else {
+                                    date = "0"+extractMatchString("(\\d)日",brList[0]);
+                                }
+                                String year = extractMatchString("(\\d\\d\\d\\d)年",tdList[0]);
+                                String compare = fullWidthNumberToHalfWidthNumber(year+month+date);
+                                if(clas.matches("^[１２]－[１２３４５]")) {
                                     Pattern pbar = Pattern.compile("－");
                                     Matcher mbar = pbar.matcher(clas);
                                     clas = mbar.replaceAll("の");
-                                    AddparseList(brList[0], tdList[0], type, clas, term, cont);
-                                } else if(clas.matches("^[１２３４５]年留学生")) {
-                                    AddparseList(brList[0], tdList[0], type, clas, term, cont);
-                                } else {
-                                    Log.d(brList[0], clas);
+                                }
+
+
+                                if(clas.matches("^[１２３４５][ＭＳＥＤＣ]")||clas.matches("^[１２３４５]年$")||clas.matches("^[１２]の[１２３４５]")||clas.matches("^[１２３４５]年留学生")) {
+                                    if (!DeleteSearch(compare,clas,term)) {
+                                        AddparseList(brList[0], tdList[0], type, clas, term, cont, compare);
+                                    }
+/*                                } else {
+                                    Log.d(brList[0], clas); 所属例外 */
                                 }
                             }
 
@@ -137,26 +157,51 @@ public class HTMLparser {
     }
 
     public void ParseInfo(){
+        parseList = new ArrayList<>();
         String[] brList = makeData.split("</p>", 0);
         for (int i = 1; i < brList.length-1; i++) {
             brList[i] = brList[i].substring(6);
-            Log.d(String.valueOf(i),brList[i]);
             String[] dataList = brList[i].split(",",0);
             tmpMap = new HashMap<>();
-            if (dataList[2].equals("other")){
-                tmpMap.put("date", dataList[1]);
-                tmpMap.put("update", dataList[0]);
-                tmpMap.put("type", dataList[2]);
-                tmpMap.put("cont",dataList[3]);
-                parseList.add(tmpMap);
-            } else {
-                tmpMap.put("date", dataList[1]);
-                tmpMap.put("update", dataList[0]);
-                tmpMap.put("type", dataList[2]);
-                tmpMap.put("clas", dataList[3]);
-                tmpMap.put("term", dataList[4]);
-                tmpMap.put("cont", dataList[5]);
-                parseList.add(tmpMap);
+            switch (dataList[0]) {
+                case "delete":
+                    tmpMap.put("compare", dataList[1]);
+                    tmpMap.put("clas", dataList[2]);
+                    tmpMap.put("term", dataList[3]);
+                    deleteList.add(tmpMap);
+                    break;
+                case "remake":
+                    tmpMap.put("compare", dataList[1]);
+                    tmpMap.put("clas", dataList[4]);
+                    tmpMap.put("term", dataList[5]);
+                    deleteList.add(tmpMap);
+                    tmpMap = new HashMap<>();
+                    tmpMap.put("compare", dataList[1]);
+                    tmpMap.put("date", dataList[2]);
+                    tmpMap.put("type", dataList[3]);
+                    tmpMap.put("clas", dataList[4]);
+                    tmpMap.put("term", dataList[5]);
+                    tmpMap.put("cont", dataList[6]);
+                    parseList.add(tmpMap);
+                    break;
+                case "new":
+                    if (dataList[3].equals("other")) {
+                        tmpMap.put("compare", dataList[1]);
+                        tmpMap.put("date", dataList[2]);
+                        tmpMap.put("type", dataList[3]);
+                        tmpMap.put("cont", dataList[4]);
+                        parseList.add(tmpMap);
+                        break;
+                    } else {
+                        tmpMap.put("compare", dataList[1]);
+                        tmpMap.put("date", dataList[2]);
+                        tmpMap.put("type", dataList[3]);
+                        tmpMap.put("clas", dataList[4]);
+                        tmpMap.put("term", dataList[5]);
+                        tmpMap.put("cont", dataList[6]);
+                        parseList.add(tmpMap);
+                        break;
+                    }
             }
         }
     }
@@ -170,7 +215,7 @@ public class HTMLparser {
             return null;
         }
     }
-    private void AddparseList(String date, String update, String type, String clas, String term, String cont){
+    private void AddparseList(String date, String update, String type, String clas, String term, String cont, String compare){
         tmpMap = new HashMap<>();
         tmpMap.put("date", date);
         tmpMap.put("update", update);
@@ -178,38 +223,30 @@ public class HTMLparser {
         tmpMap.put("clas", clas);
         tmpMap.put("term", term);
         tmpMap.put("cont", cont);
+        tmpMap.put("compare", compare);
         parseList.add(tmpMap);
     }
     public void GetfilterList(String grade, String dep, String clas,String abroad){
         filterList = new ArrayList<>();
-        String[] fil = {grade+dep,grade+"年",grade+"の"+clas,grade+"年"+abroad};
+        List<String> filter = new ArrayList<>();
+        if (grade!=null){
+            filter.add(grade+dep);
+            filter.add(grade+"年");
+            filter.add("全学年");
+            if(clas!=null){
+                filter.add(grade+"の"+clas);
+            }
+            if (abroad!=null){
+                filter.add(grade+"年"+abroad);
+            }
+        }
         for (int i = 0; i < parseList.size(); i++) {
             tmpMap = new HashMap<>();
             tmpMap = parseList.get(i);
             if (!tmpMap.get("type").equals("other")) {
                 String tmpclas = tmpMap.get("clas");
-                Pattern pmonth = Pattern.compile("\\d\\d月");
-                Matcher mmonth = pmonth.matcher(tmpMap.get("date"));
-                String month;
-                if (mmonth.find()){
-                    month = extractMatchString("(\\d\\d)月", tmpMap.get("date"));
-                } else {
-                    month = "0"+ extractMatchString("(\\d)月", tmpMap.get("date"));
-                }
-                Pattern p = Pattern.compile("\\d\\d日");
-                Matcher m = p.matcher(tmpMap.get("date"));
-                String date;
-                if (m.find()){
-                    date = extractMatchString("(\\d\\d)日",tmpMap.get("date"));
-                } else {
-                    date = "0"+extractMatchString("(\\d)日",tmpMap.get("date"));
-                }
-                String year = extractMatchString("(\\d\\d\\d\\d)年",tmpMap.get("update"));
-                String compare = fullWidthNumberToHalfWidthNumber(year+month+date);
-                tmpMap.put("compare", compare);
-                for (int j = 0; j < fil.length; j++) {
-                    Log.d(tmpclas,fil[j]);
-                    if (tmpclas.equals(fil[j])) {
+                for (int j = 0; j < filter.size(); j++) {
+                    if (tmpclas.equals(filter.get(j))) {
                         filterList.add(tmpMap);
                     }
                 }
@@ -229,6 +266,16 @@ public class HTMLparser {
             }
         }
         return sb.toString();
+    }
+    public boolean DeleteSearch(String compare, String clas, String term){
+        for (int q = 0; q < deleteList.size(); q++) {
+            Map<String, String> tmpdelMap = deleteList.get(q);
+            if (tmpdelMap.get("compare").equals(compare) && tmpdelMap.get("clas").equals(clas) && tmpdelMap.get("term").equals(term)) {
+                deleteList.remove(q);
+                return true;
+            }
+        }
+        return false;
     }
     public void sort(final String order){
         Collections.sort(filterList, new Comparator<Map<String, String>>() {

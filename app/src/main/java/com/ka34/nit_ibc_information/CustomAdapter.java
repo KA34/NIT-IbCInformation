@@ -35,7 +35,6 @@ public class CustomAdapter extends ArrayAdapter<CustomListView> {
                 typetextView.setText("休");
                 typetextView.setTextColor(Color.RED);
                 convertView.setBackgroundColor(Color.rgb(0xff,0xe4,0xdd));
-
                 break;
             case "makeup":
                 typetextView = (TextView)convertView.findViewById(R.id.type);
