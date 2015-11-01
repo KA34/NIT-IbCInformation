@@ -1,27 +1,60 @@
 package com.ka34.nit_ibc_information;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class HTMLparser {
+public class ListData {
     public static String infoData;
     public static String makeData;
-    public String str = "";
     public List<Map<String,String>> parseList = new ArrayList<>();
     public List<Map<String,String>> filterList = new ArrayList<>();
     public List<Map<String,String>> deleteList = new ArrayList<>();
-    private Map<String,String> tmpMap = new HashMap<>();
 
-    public void ParseHTML(){
+    public void GetfilterList(String grade, String dep, String clas,String abroad){
+        filterList = new ArrayList<>();
+        List<String> filter = new ArrayList<>();
+        if (grade!=null){
+            filter.add(grade+dep);
+            filter.add(grade+"年");
+            filter.add("全学年");
+            if(clas!=null){
+                filter.add(grade+"の"+clas);
+            }
+            if (abroad!=null){
+                filter.add(grade+"年"+abroad);
+            }
+        }
+        for (int i = 0; i < parseList.size(); i++) {
+            Map<String, String> tmpMap;
+            tmpMap = parseList.get(i);
+            if (!tmpMap.get("type").equals("other")) {
+                String tmpclas = tmpMap.get("clas");
+                for (int j = 0; j < filter.size(); j++) {
+                    if (tmpclas.equals(filter.get(j))) {
+                        filterList.add(tmpMap);
+                    }
+                }
+            }
+        }
+        sort("compare");
+    }
+    public void sort(final String order){
+        Collections.sort(filterList, new Comparator<Map<String, String>>() {
+            public int compare(Map<String, String> map1, Map<String, String> map2) {
+
+                String S1 = map1.get(order);
+                String S2 = map2.get(order);
+
+                return S2.compareTo(S1);
+            }
+        });
+    }
+
+/* キャンセル処理のために移動 */
+/*    public void ParseHTML(){
         Document doc = Jsoup.parse(infoData);
         Elements ele = doc.getElementsByTag("tr");
         infoData = ele.toString();
@@ -134,8 +167,8 @@ public class HTMLparser {
                                     if (!DeleteSearch(compare,clas,term)) {
                                         AddparseList(brList[0], tdList[0], type, clas, term, cont, compare);
                                     }
-/*                                } else {
-                                    Log.d(brList[0], clas); 所属例外 */
+                                } else {
+                                    Log.d(brList[0], clas); 所属例外
                                 }
                             }
 
@@ -226,35 +259,8 @@ public class HTMLparser {
         tmpMap.put("compare", compare);
         parseList.add(tmpMap);
     }
-    public void GetfilterList(String grade, String dep, String clas,String abroad){
-        filterList = new ArrayList<>();
-        List<String> filter = new ArrayList<>();
-        if (grade!=null){
-            filter.add(grade+dep);
-            filter.add(grade+"年");
-            filter.add("全学年");
-            if(clas!=null){
-                filter.add(grade+"の"+clas);
-            }
-            if (abroad!=null){
-                filter.add(grade+"年"+abroad);
-            }
-        }
-        for (int i = 0; i < parseList.size(); i++) {
-            tmpMap = new HashMap<>();
-            tmpMap = parseList.get(i);
-            if (!tmpMap.get("type").equals("other")) {
-                String tmpclas = tmpMap.get("clas");
-                for (int j = 0; j < filter.size(); j++) {
-                    if (tmpclas.equals(filter.get(j))) {
-                        filterList.add(tmpMap);
-                    }
-                }
-            }
-        }
-        sort("compare");
-    }
-    public static String fullWidthNumberToHalfWidthNumber(String str) {
+*/
+/*    public static String fullWidthNumberToHalfWidthNumber(String str) {
         if (str == null) {
             throw new IllegalArgumentException();
         }
@@ -277,15 +283,5 @@ public class HTMLparser {
         }
         return false;
     }
-    public void sort(final String order){
-        Collections.sort(filterList, new Comparator<Map<String, String>>() {
-            public int compare(Map<String, String> map1, Map<String, String> map2) {
-
-                String S1 = map1.get(order);
-                String S2 = map2.get(order);
-
-                return S2.compareTo(S1);
-            }
-        });
-    }
+*/
 }
